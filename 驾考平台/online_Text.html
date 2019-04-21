@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>在线测试</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+  <body>
+    <!--导航栏-->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="#">驾考平台</a>
+      <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#collapsibleNavId" aria-controls="collapsibleNavId"
+          aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="collapsibleNavId">
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">首页 <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">科目一</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">科目四</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdownId" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">关于</a>
+            <div class="dropdown-menu" aria-labelledby="dropdownId">
+              <a class="dropdown-item" href="#">关于我们</a>
+              <a class="dropdown-item" href="#">联系方式</a>
+              <a class="dropdown-item" href="#">工作机会</a>
+            </div>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="试题.....">
+          <button class="btn btn-outline-danger my-2 my-sm-0 px-5" type="submit">搜索</button>
+        </form>
+      </div>
+    </nav>
+
+    <!--答题区域-->
+
+    <div id="app">
+      <div class="container">
+        <!--进度条-->
+        <div class="progress my-5">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar"
+             :style="getProgressWidth" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">完成进度：{{plan}}%</div>
+        </div>
+      </div>
+      <!--展板-->
+      <div class="jumbotron mx-5">
+        <div v-if="isFinish">
+          <!-- 结果列表 -->
+          <div v-if="hasSubmit">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width:10%">题号</th>
+                    <th>你的答案</th>
+                    <th>正确答案</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(que, index) in ques">
+                    <td>{{index+1}}</td>
+                    <td>
+                      <div v-if="isCerrect(index)">
+                        <span class="badge badge-success">{{userAns[index]}}</span>
+                      </div>
+                      <div v-else>
+                        <span class="badge badge-danger">{{userAns[index]}}</span>
+                      </div>
+                    </td>
+                    <td>{{que.ans}}</td>
+                  </tr>
+                  <tr class="display-4">
+                    <td></td>
+                    <td>总分：</td>
+                    <td style="text-align:left">{{getCount}}</td>
+                  </tr>
+                </tbody>
+              </table>
+          </div>
+          <div v-else>
+            <!-- 完成 -->
+              <h1 class="display-1 align-center" style="text-align:center">完成</h1>
+              <hr class="my-2">
+              <div class="row">
+                  <div class="col-lg-6 col-sm-12 ">
+                    <button class="btn btn-danger btn-lg btn-block" @click='submit()'>提交</button>
+                  </div>
+                  <div class="col-lg-6 col-sm-12 mt-sm-3 mt-lg-0">
+                    <button class="btn btn-success btn-lg btn-block" @click='back()'>返回</button>
+                  </div>
+                </div>
+          </div>
+
+        </div>
+        <div v-else>
+          <!-- 答题界面 -->
+            <h1 class="display-7"><span class="badge badge-dark mr-3">{{progress+1}}</span>{{ques[progress].que}}</h1>
+            <hr class="my-2">
+            <!-- 单选 -->
+            <div v-if="ques[progress].isSingel">
+              <div v-for="(item, index) in ques[progress].items">
+                <div class="form-check my-2">
+                  <label class="form-check-label">
+                    <input type="radio" class="form-check-input" name="q" :value="label[index]" v-model='ans' @change='saveAns()'>
+                    <span class="badge badge-pill badge-primary mx-3">{{label[index]}}</span>{{item}}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <!-- 复选 -->
+            <div v-else>
+              <div class="form-group">
+                <div class="form-control" v-for="(item, index) in ques[progress].items">
+                  <div class="form-check">
+                    <label class="form-check-label">
+                      <input type="checkbox" class="form-check-input" name="q" :value="label[index]" @change='saveAnss()' v-model='anss'>
+                      <span class="badge badge-pill badge-primary mx-3">{{label[index]}}</span>{{item}}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <img :src="ques[progress].img" alt="" style="margin:1em">
+            </div>
+            <!--按钮：响应式Web-->
+            <div class="row">
+              <div class="col-lg-6 col-sm-12 ">
+                <button class="btn btn-dark btn-lg btn-block" v-if="progress == 0" disabled>上一题</button>
+                <button class="btn btn-danger btn-lg btn-block" v-else @click='before()'>上一题</button>
+              </div>
+              <div class="col-lg-6 col-sm-12 mt-sm-3 mt-lg-0">
+                <button class="btn btn-success btn-lg btn-block" @click='next()'>下一题</button>
+              </div>
+            </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+      let v = new Vue({
+
+        el:'#app',
+
+        data:{
+          ques:[
+            {que:'上道路行驶的机动车驾驶人未携带机动车驾驶证、行驶证的，除扣留机动车外，并受到什么处罚？',items:['警告','罚款','拘留','吊销驾照'],img:'',isSingel:true,ans:'B'},
+            {que:'车辆在山区道路跟车行驶时，应怎样做？',items:['紧随前车之后','适当加大安全距离','适当减小安全距离','尽可能寻找超车机会'],img:'',isSingel:true,ans:'B'},
+            {que:'驾照的实习期是多长时间？',items:['3个月','半年','一年','两年'],img:'',isSingel:true,ans:'C'},
+            {que:'这样临时停放红色轿车有什么违法行为？',items:['距离加油让不到30米','停车占用非机动车道','距离路边超过30厘米','在有禁停标线路段停车'],img:'img_4.png',isSingel:true,ans:'A'},
+            {que:'[多选]戚某驾驶大客车，乘载28人（核载55人），由南向北行至一无交通信号控制的交叉路口，以50公里的时速与由东向西行至该路口李某驾驶的重型半挂牵引车（核载40吨，实载55.2吨）侧面相撞，造成12人死亡、17人受伤。此事故中的主要违法行为是什么？',items:['客车超员','客车超速行驶','货车超载','货车驾驶人经验不足'],img:'',isSingel:false,ans:['B','C']},
+          ],
+          label:['A','B','C','D','E','F','G'],
+          ans:'',
+          anss:[],
+          userAns:[],
+          progress:0,
+          plan:0,
+          isFinish:false,
+          hasSubmit:false,
+          picked:true,
+          count:0,
+        },
+        //表达式
+        methods: {
+          /*
+            下一题
+          */
+          next:function(){ 
+            //保存当前选择答案
+            //this.saveAns();
+            //是否完成
+            if(this.progress == this.ques.length-1)
+              this.isFinish = true;
+              //改变进度
+            if(this.progress+1 <= this.ques.length){
+              this.progress++;            
+            }
+            //显示当前题目已选答案（如果没选，则为空）
+            this.ans = this.userAns[this.progress];
+          },
+          /*
+            上一题
+          */
+          before:function(){
+            //this.saveAns();
+            //改变进度
+            if(this.progress-1 >= 0)
+             this.progress--;
+                       
+            //显示前一题已选答案（如果没选，则为空）
+            this.ans = this.userAns[this.progress];
+          },
+          /*
+            提交
+          */
+          submit:function(){
+            
+            this.hasSubmit = true;
+          },
+          /*
+            返回
+          */
+          back:function(){            
+            this.progress--; 
+            this.ans = this.userAns[this.progress];
+            this.isFinish = false;
+          },
+          /*
+            保存答案
+          */
+          saveAns:function(){
+            //保存当前答案
+            this.userAns[this.progress] = this.ans;
+            console.log(this.userAns);
+            
+          },
+          saveAnss:function(){
+            //保存当前答案
+            this.userAns[this.progress] = this.anss;
+            console.log(this.userAns);
+            
+          },
+          /*
+            判断是否正确
+          */
+          isCerrect:function(i){
+            
+            
+            if(this.userAns[i] instanceof Array){
+              let result=true;
+              for(let n=0;n<this.userAns[i].length;n++){
+                if(this.userAns[i][n] != this.ques[i].ans[n]){
+                  result = false;
+                  break;
+                }
+                n++;
+              }
+              return result;
+            }
+            else
+              return this.userAns[i] == this.ques[i].ans;
+          },
+          
+        },
+        //运算
+        computed: {
+          //进度条
+          getProgressWidth:function(){
+            this.plan = (this.progress/(this.ques.length))*100;
+            this.plan = parseFloat(this.plan).toFixed(0);
+            return `width:${this.plan}%;`
+          },
+          getCount:function(){
+            //获得成绩
+            for(let i=0;i<this.userAns.length;i++){
+              if(this.isCerrect(i)){
+                this.count++;
+              }  
+            }
+            return this.count;
+          },
+          
+          
+        },  
+        mounted(){
+        
+        }
+
+      })
+    </script>
+      
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
